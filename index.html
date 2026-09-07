@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Soft Matter — 软体实验室</title><link rel="stylesheet" href="style.css"></head><body>
+<main id="stage" aria-label="可拖拽的三维果冻"></main>
+<header><h1>Soft<br><i>Matter.</i></h1><p>软体实验室<br>TOUCH · STRETCH · RELEASE</p></header>
+<div id="hint">拖住果冻，拉动，然后松手。</div>
+<aside><div class="panel-title">Material lab <span>01 / 软体</span></div><label for="shape">形状</label><select id="shape"><option value="ghost">青柠果冻精灵</option><option value="watermelon">西瓜果冻</option><option value="bear">小熊果冻</option><option value="star" selected>星星果冻</option></select><label>颜色 <span id="colorName">西瓜红</span></label><div class="swatches"><button data-color="#ff243e" aria-label="西瓜红" class="selected" style="--c:#ff243e"></button><button data-color="#00bc7d" aria-label="翡翠" style="--c:#00bc7d"></button><button data-color="#f6ad00" aria-label="琥珀" style="--c:#f6ad00"></button><button data-color="#627bef" aria-label="蓝莓" style="--c:#627bef"></button><input type="color" id="color" value="#ff243e" aria-label="自定义颜色"></div>
+<label for="elasticity">弹性 <output id="elasticityValue">50</output></label><input id="elasticity" type="range" min="10" max="100" value="50">
+<label for="damping">阻尼 <output id="dampingValue">35</output></label><input id="damping" type="range" min="5" max="95" value="35">
+<label for="glass">通透度 <output id="glassValue">100</output></label><input id="glass" type="range" min="0" max="100" value="100">
+<label for="angle">环境旋转 <output id="angleValue">42°</output></label><input id="angle" type="range" min="-180" max="180" value="42">
+<div class="actions"><button id="bounce">弹一下 ↓</button><button id="reset">重置 ↺</button></div></aside>
+<footer><span>REALTIME SOFT BODY<br>拖拽塑形 · 松手回弹 · 双击弹跳</span><button id="pause" aria-label="暂停动画">暂停</button></footer><div id="error" hidden></div><script type="module" src="game.js"></script></body></html>
+
+
+
+
+
+
+
