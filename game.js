@@ -16,7 +16,7 @@ const settings={elasticity:50,damping:35,glass:100,angle:42};
 const hdriAngle={value:0};
 const watermelon={value:1};
 const pmrem=new T.PMREMGenerator(renderer);
-new HDRLoader().load('./assets/pav_studio_03_2k.hdr',hdr=>{
+function applyEnvironment(hdr){
   hdr.mapping=T.EquirectangularReflectionMapping;scene.environment=pmrem.fromEquirectangular(hdr).texture;
   material.onBeforeCompile=shader=>{
     shader.uniforms.studioHDR={value:hdr};shader.uniforms.hdriAngle=hdriAngle;shader.uniforms.watermelon=watermelon;
@@ -38,8 +38,8 @@ new HDRLoader().load('./assets/pav_studio_03_2k.hdr',hdr=>{
       }
       if(watermelon>1.5 && watermelon<2.5){
         float face=1.-smoothstep(.78,1.,length((vFruit.xy-vec2(0.,1.3))/vec2(.98,1.05)));
-        material.attenuationColor=mix(mix(attenuationColor,vec3(1.),.12),attenuationColor*.55,face);
-        material.attenuationDistance=1.35;
+        material.attenuationColor=mix(vec3(.18,.9,.002),vec3(.015,.32,.002),face);
+        material.attenuationDistance=.95;
         material.transmission*=1.;
       }
       if(watermelon>2.5){
@@ -56,7 +56,17 @@ new HDRLoader().load('./assets/pav_studio_03_2k.hdr',hdr=>{
     `);
     shader.fragmentShader=shader.fragmentShader.replace('#include <transmission_fragment>',transmission);
   };material.needsUpdate=true;
-},undefined,()=>{$('hint').textContent='环境贴图加载失败，请刷新重试。'});
+}
+// A local studio environment keeps reflections and fruit shading active even offline.
+const studioPixels=new Uint8Array(64*32*4);
+for(let y=0;y<32;y++)for(let x=0;x<64;x++){
+  const window=(x>7&&x<20&&y>7&&y<21&&x!==13&&y!==14)||(x>39&&x<44&&y>5&&y<23);
+  const value=window?255:y<16?105:65,n=(y*64+x)*4;
+  studioPixels[n]=studioPixels[n+1]=studioPixels[n+2]=value;studioPixels[n+3]=255;
+}
+const studioFallback=new T.DataTexture(studioPixels,64,32);studioFallback.needsUpdate=true;
+applyEnvironment(studioFallback);stage.dataset.environment='fallback';
+new HDRLoader().load('./assets/pav_studio_03_mobile.hdr',hdr=>{applyEnvironment(hdr);stage.dataset.environment='studio';},undefined,()=>{stage.dataset.environment='fallback';});
 
 // Translucent contact and a tinted transmitted-light lobe, not opaque shadows.
 // This real-time footprint approximation is not ray-traced caustics.
@@ -84,7 +94,7 @@ function loadShape(name){
   geometry.computeBoundingBox();const size=geometry.boundingBox.getSize(new T.Vector3());shapeWidth=size.x;shapeDepth=size.z;
   const coincident=new Map();for(let i=0;i<positions.count;i++){const key=[rest[i*3],rest[i*3+1],rest[i*3+2]].map(v=>Math.round(v*10000)).join(',');if(!coincident.has(key))coincident.set(key,[]);coincident.get(key).push(i)}seams=[...coincident.values()].filter(g=>g.length>1);
   for(const [x,y,z,r] of made.face){const mesh=new T.Mesh(new T.SphereGeometry(r,16,10),name==='ghost'?ghostMaterials[Math.min(details.length,4)]:detailMaterial);mesh.scale.set(name==='ghost'&&details.length>=2&&details.length<4?1.4:1,name==='watermelon'?1.75:name==='ghost'&&details.length<2?1.65:1,.55);const tilt=name==='watermelon'?(x>0?-.45:.35):0;mesh.geometry.rotateZ(tilt);scene.add(mesh);let closest=0,best=Infinity;for(let i=0;i<positions.count;i++){const dist=(rest[i*3]-x)**2+(rest[i*3+1]-y)**2+(rest[i*3+2]-z)**2;if(dist<best){best=dist;closest=i}}details.push({mesh,point:new T.Vector3(x,y,z),closest})}
-  updateNormals();$('shape').value=name;
+  updateNormals();$('shape').value=name;shadowMaterial.uniforms.tint.value.set(name==='ghost'?'#83df1e':$('color').value);
   resume();
 }
 function updateNormals(){geometry.computeVertexNormals();const normal=geometry.attributes.normal;for(const group of seams){sum.set(0,0,0);for(const i of group)sum.add(p.fromBufferAttribute(normal,i));sum.normalize();for(const i of group)normal.setXYZ(i,sum.x,sum.y,sum.z)}normal.needsUpdate=true}
@@ -102,7 +112,7 @@ addEventListener('blur',release);
 function drop(){release();resume();body.drop(2.1);positions.array.set(rest);localVelocity.fill(0)}
 renderer.domElement.addEventListener('dblclick',drop);$('bounce').onclick=drop;
 function updateMaterial(){material.transmission=settings.glass/100;material.roughness=.012+(1-material.transmission)*.2;material.color.copy(material.attenuationColor).lerp(new T.Color(0xffffff),material.transmission);shadowMaterial.uniforms.glass.value=material.transmission;hdriAngle.value=settings.angle*Math.PI/180;scene.environmentRotation.y=hdriAngle.value}
-function color(value){material.attenuationColor.set(value).lerp(new T.Color(0xffffff),.002);shadowMaterial.uniforms.tint.value.set(value);$('color').value=value;document.querySelectorAll('[data-color]').forEach(b=>b.classList.toggle('selected',b.dataset.color===value));updateMaterial()}
+function color(value){material.attenuationColor.set(value).lerp(new T.Color(0xffffff),.002);shadowMaterial.uniforms.tint.value.set($('shape').value==='ghost'?'#83df1e':value);$('color').value=value;document.querySelectorAll('[data-color]').forEach(b=>b.classList.toggle('selected',b.dataset.color===value));updateMaterial()}
 document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{color(b.dataset.color);$('colorName').textContent=b.getAttribute('aria-label')});$('color').oninput=e=>{color(e.target.value);$('colorName').textContent='自定义'};
 for(const name of Object.keys(settings))$(name).oninput=e=>{settings[name]=+e.target.value;$(name+'Value').value=e.target.value+(name==='angle'?'°':'');updateMaterial()};
 $('shape').onchange=e=>loadShape(e.target.value);
