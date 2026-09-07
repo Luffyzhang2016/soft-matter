@@ -38,8 +38,8 @@ new HDRLoader().load('./assets/pav_studio_03_2k.hdr',hdr=>{
       }
       if(watermelon>1.5 && watermelon<2.5){
         float face=1.-smoothstep(.78,1.,length((vFruit.xy-vec2(0.,1.3))/vec2(.98,1.05)));
-        material.attenuationColor=mix(vec3(.18,.9,.002),vec3(.015,.32,.002),face);
-        material.attenuationDistance=.95;
+        material.attenuationColor=mix(mix(attenuationColor,vec3(1.),.12),attenuationColor*.55,face);
+        material.attenuationDistance=1.35;
         material.transmission*=1.;
       }
       if(watermelon>2.5){
@@ -85,8 +85,6 @@ function loadShape(name){
   const coincident=new Map();for(let i=0;i<positions.count;i++){const key=[rest[i*3],rest[i*3+1],rest[i*3+2]].map(v=>Math.round(v*10000)).join(',');if(!coincident.has(key))coincident.set(key,[]);coincident.get(key).push(i)}seams=[...coincident.values()].filter(g=>g.length>1);
   for(const [x,y,z,r] of made.face){const mesh=new T.Mesh(new T.SphereGeometry(r,16,10),name==='ghost'?ghostMaterials[Math.min(details.length,4)]:detailMaterial);mesh.scale.set(name==='ghost'&&details.length>=2&&details.length<4?1.4:1,name==='watermelon'?1.75:name==='ghost'&&details.length<2?1.65:1,.55);const tilt=name==='watermelon'?(x>0?-.45:.35):0;mesh.geometry.rotateZ(tilt);scene.add(mesh);let closest=0,best=Infinity;for(let i=0;i<positions.count;i++){const dist=(rest[i*3]-x)**2+(rest[i*3+1]-y)**2+(rest[i*3+2]-z)**2;if(dist<best){best=dist;closest=i}}details.push({mesh,point:new T.Vector3(x,y,z),closest})}
   updateNormals();$('shape').value=name;
-  if(name==='bear'){color('#ff9a05');$('colorName').textContent='琥珀软糖'}
-  else if(name==='ghost'){color('#83df1e');$('colorName').textContent='青柠绿'}
   resume();
 }
 function updateNormals(){geometry.computeVertexNormals();const normal=geometry.attributes.normal;for(const group of seams){sum.set(0,0,0);for(const i of group)sum.add(p.fromBufferAttribute(normal,i));sum.normalize();for(const i of group)normal.setXYZ(i,sum.x,sum.y,sum.z)}normal.needsUpdate=true}
@@ -110,8 +108,8 @@ for(const name of Object.keys(settings))$(name).oninput=e=>{settings[name]=+e.ta
 $('shape').onchange=e=>loadShape(e.target.value);
 $('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'继续':'暂停'};
 $('reset').onclick=()=>{release();body.reset();positions.array.set(rest);localVelocity.fill(0);for(const [k,v] of Object.entries({elasticity:50,damping:35,glass:100,angle:42})){settings[k]=v;$(k).value=v;$(k+'Value').value=v+(k==='angle'?'°':'')}color('#ed0056');$('colorName').textContent='覆盆子';resume()};
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;const distance=w<600?15.5:12.5;camera.position.set(0,1.15+distance*Math.tan(18*Math.PI/180),distance);camera.lookAt(0,1.15,0);camera.setViewOffset(w,h,w>=600&&w<1000?w*.065:0,w<600?h*.16:0,w,h);camera.updateProjectionMatrix()}
-addEventListener('resize',resize);resize();loadShape('ghost');color('#83df1e');
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;const mobile=w<600,distance=mobile?14.5:12.5;renderer.toneMappingExposure=mobile?1.05:.95;sun.intensity=mobile?1.7:2;material.thickness=mobile?.65:.85;material.envMapIntensity=mobile?1.2:1.1;camera.position.set(0,1.15+distance*Math.tan(18*Math.PI/180),distance);camera.lookAt(0,mobile?.72:1.15,0);camera.clearViewOffset();if(w>=600&&w<1000)camera.setViewOffset(w,h,w*.065,0,w,h);camera.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();loadShape('ghost');color('#ff243e');
 
 function step(dt){
   const desired=dragging?{target:target.toArray(),local:grabLocal.toArray()}:null;
