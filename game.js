@@ -111,7 +111,7 @@ $('shape').onchange=e=>loadShape(e.target.value);
 $('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'继续':'暂停'};
 $('reset').onclick=()=>{release();body.reset();positions.array.set(rest);localVelocity.fill(0);for(const [k,v] of Object.entries({elasticity:50,damping:35,glass:100,angle:42})){settings[k]=v;$(k).value=v;$(k+'Value').value=v+(k==='angle'?'°':'')}color('#ed0056');$('colorName').textContent='覆盆子';resume()};
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;const distance=w<600?15.5:12.5;camera.position.set(0,1.15+distance*Math.tan(18*Math.PI/180),distance);camera.lookAt(0,1.15,0);camera.setViewOffset(w,h,w>=600&&w<1000?w*.065:0,w<600?h*.16:0,w,h);camera.updateProjectionMatrix()}
-addEventListener('resize',resize);resize();loadShape('star');color('#ff243e');
+addEventListener('resize',resize);resize();loadShape('ghost');color('#83df1e');
 
 function step(dt){
   const desired=dragging?{target:target.toArray(),local:grabLocal.toArray()}:null;
