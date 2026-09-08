@@ -118,6 +118,11 @@ for(const name of Object.keys(settings))$(name).oninput=e=>{settings[name]=+e.ta
 $('shape').onchange=e=>loadShape(e.target.value);
 $('pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'继续':'暂停'};
 $('reset').onclick=()=>{release();body.reset();positions.array.set(rest);localVelocity.fill(0);for(const [k,v] of Object.entries({elasticity:50,damping:35,glass:100,angle:42})){settings[k]=v;$(k).value=v;$(k+'Value').value=v+(k==='angle'?'°':'')}color('#ed0056');$('colorName').textContent='覆盆子';resume()};
+const settingsPanel=$('settingsPanel'),settingsToggle=$('settingsToggle');
+function showSettings(open){settingsPanel.classList.toggle('open',open);document.body.classList.toggle('settings-visible',open);settingsToggle.setAttribute('aria-expanded',String(open));settingsToggle.textContent=open?'关闭 ×':'设置 ⚙'}
+settingsToggle.onclick=()=>showSettings(!settingsPanel.classList.contains('open'));
+$('settingsClose').onclick=()=>showSettings(false);
+$('mobileBounce').onclick=drop;$('mobileReset').onclick=()=>$('reset').click();
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;const mobile=w<600,distance=mobile?14.5:12.5;renderer.toneMappingExposure=mobile?1.05:.95;sun.intensity=mobile?1.7:2;material.thickness=mobile?.65:.85;material.envMapIntensity=mobile?1.2:1.1;camera.position.set(0,1.15+distance*Math.tan(18*Math.PI/180),distance);camera.lookAt(0,mobile?.72:1.15,0);camera.clearViewOffset();if(w>=600&&w<1000)camera.setViewOffset(w,h,w*.065,0,w,h);camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();loadShape('ghost');color('#ff243e');
 
